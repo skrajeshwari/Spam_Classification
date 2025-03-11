@@ -1,0 +1,132 @@
+# prompt: Extract the Embeddings before Training from 'SpamClassifier'
+
+# Get the embeddings
+embeddings = model.embedding.weight.detach().numpy()
+print(f"Embeddings shape: {embeddings.shape}")
+
+# prompt: Get the vocabulary from the TextVectorization layer
+
+# Get the vocabulary from the vectorize_layer
+vocab = vocab
+print(vocab)
+
+# prompt: Plot a word cloud to identify most frequently occurring words from the vocabulary.
+
+from wordcloud import WordCloud
+
+# Combine all the text data into a single string
+text_data = " ".join(df['v2'].tolist())
+
+# Generate the word cloud
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_data)
+
+# Display the generated image:
+plt.figure(figsize=(8, 8), facecolor=None)
+plt.imshow(wordcloud)
+plt.axis("off")
+plt.tight_layout(pad=0)
+plt.show()
+
+# prompt: Choose 10 most frequently occuring words from the word cloud and create a 2-dimensional PCA model of the word vectors using the scikit-learn PCA class.
+
+from collections import Counter
+
+# Get the word frequencies from the word cloud
+word_counts = wordcloud.process_text(text_data)
+
+# Get the 10 most frequent words
+top_10_words = [word for word, count in Counter(word_counts).most_common(10)]
+
+# Get the word vectors for the top 10 words
+top_10_word_vectors = [embeddings[vocab[word]] for word in top_10_words if word in vocab]
+
+# Create a PCA model with 2 components
+pca = PCA(n_components=2)
+
+# Fit the PCA model to the word vectors
+pca_result = pca.fit_transform(top_10_word_vectors)
+
+# Print the PCA result
+print(pca_result)
+
+# prompt: visualize top_words using an appropriate plot.
+
+# Create a scatter plot
+plt.figure(figsize=(8, 6))
+for i in range(len(top_10_words)):
+  plt.scatter(pca_result[i, 0], pca_result[i, 1], label=top_10_words[i])
+
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Top 10 Words Visualization")
+plt.legend()
+plt.show()
+
+# Get the word frequencies from the word cloud
+word_counts = wordcloud.process_text(text_data)
+
+# Get the 10 most frequent words for spam and ham
+spam_words = [word for word, count in Counter({k: v for k, v in word_counts.items() if df[df['v2'].str.contains(k)]['v1'].sum() > 0}).most_common(5)]
+ham_words = [word for word, count in Counter({k: v for k, v in word_counts.items() if df[df['v2'].str.contains(k)]['v1'].sum() == 0}).most_common(5)]
+
+# Get the word vectors for the top 5 words for spam and ham
+spam_word_vectors = [embeddings[vocab[word]] for word in spam_words if word in vocab]
+ham_word_vectors = [embeddings[vocab[word]] for word in ham_words if word in vocab]
+
+# Create a PCA model with 2 components
+pca = PCA(n_components=2)
+
+# Fit the PCA model to the word vectors
+spam_pca_result = pca.fit_transform(spam_word_vectors)
+ham_pca_result = pca.fit_transform(ham_word_vectors)
+
+# Create a scatter plot
+plt.figure(figsize=(8, 6))
+for i in range(len(spam_words)):
+  plt.scatter(spam_pca_result[i, 0], spam_pca_result[i, 1], label=spam_words[i], color='red')
+
+for i in range(len(ham_words)):
+  plt.scatter(ham_pca_result[i, 0], ham_pca_result[i, 1], label=ham_words[i], color='blue')
+
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Top 5 Words for Spam and Ham Visualization")
+plt.legend()
+plt.show()
+
+# prompt: Update the code in the previous cell to add text along with the data points in the plot. Also, add legends to demarcate red for spam and green for ham.
+
+# Get the word frequencies from the word cloud
+word_counts = wordcloud.process_text(text_data)
+
+# Get the 10 most frequent words for spam and ham
+spam_words = [word for word, count in Counter({k: v for k, v in word_counts.items() if df[df['v2'].str.contains(k)]['v1'].sum() > 0}).most_common(5)]
+ham_words = [word for word, count in Counter({k: v for k, v in word_counts.items() if df[df['v2'].str.contains(k)]['v1'].sum() == 0}).most_common(5)]
+
+# Get the word vectors for the top 5 words for spam and ham
+spam_word_vectors = [embeddings[vocab[word]] for word in spam_words if word in vocab]
+ham_word_vectors = [embeddings[vocab[word]] for word in ham_words if word in vocab]
+
+# Create a PCA model with 2 components
+pca = PCA(n_components=2)
+
+# Fit the PCA model to the word vectors
+spam_pca_result = pca.fit_transform(spam_word_vectors)
+ham_pca_result = pca.fit_transform(ham_word_vectors)
+
+# Create a scatter plot
+plt.figure(figsize=(8, 6))
+for i in range(len(spam_words)):
+  plt.scatter(spam_pca_result[i, 0], spam_pca_result[i, 1], label=spam_words[i], color='red')
+  plt.text(spam_pca_result[i, 0], spam_pca_result[i, 1], spam_words[i], fontsize=9)
+
+for i in range(len(ham_words)):
+  plt.scatter(ham_pca_result[i, 0], ham_pca_result[i, 1], label=ham_words[i], color='green')
+  plt.text(ham_pca_result[i, 0], ham_pca_result[i, 1], ham_words[i], fontsize=9)
+
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.title("Top 5 Words for Spam and Ham Visualization")
+plt.legend()
+plt.show()
+
