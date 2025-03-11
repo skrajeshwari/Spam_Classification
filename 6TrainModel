@@ -1,0 +1,100 @@
+# prompt: Train the model on the data.
+
+# Convert data to tensors
+X_train_tensor = torch.tensor(padded_texts[:int(len(padded_texts)*0.8)], dtype=torch.long)
+y_train_tensor = torch.tensor(df['v1'][:int(len(df['v1'])*0.8)], dtype=torch.long)
+X_test_tensor = torch.tensor(padded_texts[int(len(padded_texts)*0.8):], dtype=torch.long)
+#y_test_tensor = torch.tensor(df['v1'][int(len(df['v1'])*0.8):], dtype=torch.long)
+y_test_tensor = torch.tensor(df['v1'][int(len(df['v1'])*0.8):].values, dtype=torch.long)
+
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters())
+
+# Train the model
+epochs = 10
+for epoch in range(epochs):
+    optimizer.zero_grad()
+    outputs = model(X_train_tensor)
+    loss = criterion(outputs, y_train_tensor)
+    loss.backward()
+    optimizer.step()
+    print(f'Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}')
+
+# During Training Collect the loss and Metrics of Train and Validation. Plot the Metrics after Training.
+
+# prompt: During Training Collect the loss and Metrics of Train and Validation. Plot the Metrics after Training. Take hints from the code in the cell and update it accordingly. try a different approach.
+
+from sklearn.metrics import accuracy_score
+
+# Convert data to tensors
+X_train_tensor = torch.tensor(padded_texts[:int(len(padded_texts)*0.8)], dtype=torch.long)
+y_train_tensor = torch.tensor(df['v1'][:int(len(df['v1'])*0.8)], dtype=torch.long)
+X_test_tensor = torch.tensor(padded_texts[int(len(padded_texts)*0.8):], dtype=torch.long)
+y_test_tensor = torch.tensor(df['v1'][int(len(df['v1'])*0.8):].values, dtype=torch.long)
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters())
+
+# Train the model
+epochs = 10
+train_losses = []
+val_losses = []
+train_accuracies = []
+val_accuracies = []
+
+for epoch in range(epochs):
+    # Train
+    model.train()
+    optimizer.zero_grad()
+    outputs = model(X_train_tensor)
+    train_loss = criterion(outputs, y_train_tensor)
+    train_loss.backward()
+    optimizer.step()
+    train_losses.append(train_loss.item())
+
+    # Calculate training accuracy
+    _, predicted = torch.max(outputs.data, 1)
+    train_accuracy = accuracy_score(y_train_tensor.numpy(), predicted.numpy())
+    train_accuracies.append(train_accuracy)
+
+    # Validate
+    model.eval()
+    with torch.no_grad():
+        outputs = model(X_test_tensor)
+        val_loss = criterion(outputs, y_test_tensor)
+        val_losses.append(val_loss.item())
+
+        # Calculate validation accuracy
+        _, predicted = torch.max(outputs.data, 1)
+        val_accuracy = accuracy_score(y_test_tensor.numpy(), predicted.numpy())
+        val_accuracies.append(val_accuracy)
+
+    print(f'Epoch [{epoch+1}/{epochs}], '
+          f'Train Loss: {train_loss.item():.4f}, '
+          f'Train Accuracy: {train_accuracy:.4f}, '
+          f'Val Loss: {val_loss.item():.4f}, '
+          f'Val Accuracy: {val_accuracy:.4f}')
+
+# Plot the metrics
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.plot(train_losses, label='Train Loss')
+plt.plot(val_losses, label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Loss Curves')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(train_accuracies, label='Train Accuracy')
+plt.plot(val_accuracies, label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Accuracy Curves')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
